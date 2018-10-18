@@ -90,6 +90,12 @@ class User(db.Model):
 
 # HINT: Check out index.html where the form will be rendered to decide what field names to use in the form class definition
 
+class TweetForm(FlaskForm):
+    text = StringField("Enter the tweet you wish existed:")
+    username = StringField("Enter the username:")
+    display_name = StringField("Enter the display name:")
+    submit = SubmitField()
+
 # TODO 364: Set up custom validation for this form such that:
 # - the twitter username may NOT start with an "@" symbol (the template will put that in where it should appear)
 # - the display name MUST be at least 2 words (this is a useful technique to practice, even though this is not true of everyone's actual full name!)
