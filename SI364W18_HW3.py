@@ -58,7 +58,10 @@ class Tweet(db.Model):
     __tablename__ = "tweets"
     id = db.Column(db.Integer,primary_key=True)
     text = db.Column(db.String(280))
-    user_id = db.Column(db.Integer,ForeignKey("users.id"))
+    user_id = db.Column(db.Integer,db.ForeignKey("users.id"))
+
+    def __repr__(self):
+        return "{} (ID: {})".format(self.text, self.id)
 
 
 # - User
@@ -70,9 +73,12 @@ class Tweet(db.Model):
 class User(db.Model):
     __tablename__ = "users"
     id = db.Column(db.Integer,primary_key=True)
-    username = db.Column(db.String(64), Unique=True)
+    username = db.Column(db.String(64), unique=True)
     display_name = db.Column(db.String(124))
     tweets = db.relationship('Tweet', backref='User')
+
+    def __repr__(self):
+        return "{} | ID: {}".format(self.username, self.id)
 
 ## Should have a __repr__ method that returns strings of a format like:
 #### {username} | ID: {id}
@@ -91,14 +97,23 @@ class User(db.Model):
 # HINT: Check out index.html where the form will be rendered to decide what field names to use in the form class definition
 
 class TweetForm(FlaskForm):
-    text = StringField("Enter the tweet you wish existed:")
-    username = StringField("Enter the username:")
-    display_name = StringField("Enter the display name:")
-    submit = SubmitField()
+    text = StringField("Enter the tweet you wish existed:", validators=[Required(), Length(max=280)])
+    username = StringField("Enter the username:", validators = [Required(), Length(max=64)])
+    display_name = StringField("Enter the display name:", validators = [Required()])
+    submit = SubmitField("Submit")
 
 # TODO 364: Set up custom validation for this form such that:
 # - the twitter username may NOT start with an "@" symbol (the template will put that in where it should appear)
 # - the display name MUST be at least 2 words (this is a useful technique to practice, even though this is not true of everyone's actual full name!)
+
+    def validate_username(self, field):
+        if field.data[0] == '@':
+            raise ValidationError("Your username was not valid because it starts with an @ symbol")
+
+    def validate_display_name(self, field):
+        if ' ' not in field.data:
+            raise ValidationError("Your display name was not valid because it needs to be at least two words")
+
 
 # TODO 364: Make sure to check out the sample application linked in the readme to check if yours is like it!
 
@@ -128,6 +143,8 @@ def internal_server_error(e):
 ## HINT: Check out the index.html template to make sure you're sending it the data it needs.
 ## We have provided comment scaffolding. Translate those comments into code properly and you'll be all set!
 
+
+
 # NOTE: The index route should:
 # - Show the Tweet form.
 # - If you enter a tweet with identical text and username to an existing tweet, it should redirect you to the list of all the tweets and a message that you've already saved a tweet like that.
@@ -137,11 +154,16 @@ def internal_server_error(e):
 @app.route('/', methods=['GET', 'POST'])
 def index():
     # Initialize the form
-
+    form = TweetForm()
+    if form.validate_on_submit():
+        text = form.text.data
+        username = form.username.data
+        display_name = form.display_name.data
     # Get the number of Tweets
-
+        num_tweets = len(Tweet.query.all())
     # If the form was posted to this route,
     ## Get the data from the form
+        
 
     ## Find out if there's already a user with the entered username
     ## If there is, save it in a variable: user
@@ -160,7 +182,7 @@ def index():
     errors = [v for v in form.errors.values()]
     if len(errors) > 0:
         flash("!!!! ERRORS IN FORM SUBMISSION - " + str(errors))
-    return render_template('index.html',) # TODO 364: Add more arguments to the render_template invocation to send data to index.html
+    return render_template('index.html', form=form) # TODO 364: Add more arguments to the render_template invocation to send data to index.html
 
 @app.route('/all_tweets')
 def see_all_tweets():
