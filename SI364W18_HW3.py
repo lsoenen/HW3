@@ -144,7 +144,6 @@ def internal_server_error(e):
 ## We have provided comment scaffolding. Translate those comments into code properly and you'll be all set!
 
 
-
 # NOTE: The index route should:
 # - Show the Tweet form.
 # - If you enter a tweet with identical text and username to an existing tweet, it should redirect you to the list of all the tweets and a message that you've already saved a tweet like that.
@@ -156,27 +155,40 @@ def index():
     # Initialize the form
     form = TweetForm()
     if form.validate_on_submit():
-        text = form.text.data
-        username = form.username.data
-        display_name = form.display_name.data
     # Get the number of Tweets
-        num_tweets = len(Tweet.query.all())
+        tweets = Tweet.query.all()
+        num_tweets = len(tweets)
     # If the form was posted to this route,
     ## Get the data from the form
-        
-
+        form_text = form.text.data
+        form_username = form.username.data
+        form_display_name = form.display_name.data
     ## Find out if there's already a user with the entered username
     ## If there is, save it in a variable: user
     ## Or if there is not, then create one and add it to the database
-
+        user = db.session.query(User).filter_by(username=form_username).first()
+        if user:
+            pass
+        else:
+            user = User(username=form_username, display_name=form_display_name)
+            db.session.add(user)
+            db.session.commit()
     ## If there already exists a tweet in the database with this text and this user id (the id of that user variable above...) ## Then flash a message about the tweet already existing
     ## And redirect to the list of all tweets
-
     ## Assuming we got past that redirect,
     ## Create a new tweet object with the text and user id
     ## And add it to the database
     ## Flash a message about a tweet being successfully added
     ## Redirect to the index page
+        if db.session.query(Tweet).filter_by(text=form_text, user_id=user.id).first():
+            flash("That tweet already exists!")
+            return redirect(url_for("see all tweets"))
+        else:
+            tweet = Tweet(text=form_text, user_id=user.id)
+            db.session.add(tweet)
+            db.session.commit()
+            flash("Tweet successfully added to the database")
+            return redirect(url_for("index"))
 
     # PROVIDED: If the form did NOT validate / was not submitted
     errors = [v for v in form.errors.values()]
@@ -186,19 +198,44 @@ def index():
 
 @app.route('/all_tweets')
 def see_all_tweets():
-    pass # Replace with code
     # TODO 364: Fill in this view function so that it can successfully render the template all_tweets.html, which is provided.
     # HINT: Careful about what type the templating in all_tweets.html is expecting! It's a list of... not lists, but...
     # HINT #2: You'll have to make a query for the tweet and, based on that, another query for the username that goes with it...
+    tweets = Tweet.query.all()
+    tweet_count = len(tweets)
+    tweet_users = []
+    for tweet in tweets:
+        user = User.query.filter_by(id=tweet.user_id).first()
+        tweet_users.append((tweet, user))
+    return render_template('all_tweets.html', all_tweets=tweet_users)
+
 
 
 @app.route('/all_users')
 def see_all_users():
-    pass # Replace with code
     # TODO 364: Fill in this view function so it can successfully render the template all_users.html, which is provided.
+    users = User.query.all()
+    return render_template('all_users.html', users=users)
+
 
 # TODO 364
 # Create another route (no scaffolding provided) at /longest_tweet with a view function get_longest_tweet (see details below for what it should do)
+
+@app.route('/longest_tweet')
+def get_longest_tweet():
+    tweets = Tweet.query.all()
+    tweets = []
+    for tweet in tweets:
+        tweets.append(tweet)
+    return render_template('longest_tweet.html', longest_tweet=tweets)
+
+
+
+
+
+
+
+
 # TODO 364
 # Create a template to accompany it called longest_tweet.html that extends from base.html.
 
