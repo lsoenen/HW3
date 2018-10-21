@@ -97,9 +97,9 @@ class User(db.Model):
 # HINT: Check out index.html where the form will be rendered to decide what field names to use in the form class definition
 
 class TweetForm(FlaskForm):
-    text = StringField("Enter the tweet you wish existed:", validators=[Required(), Length(max=280)])
-    username = StringField("Enter the username:", validators = [Required(), Length(max=64)])
-    display_name = StringField("Enter the display name:", validators = [Required()])
+    text = StringField("Enter the text of the tweet (no more than 280 chars):", validators=[Required(), Length(min=1,max=280)])
+    username = StringField('Enter the username of the twitter user (no "@"!):', validators = [Required(), Length(min=1,max=64)])
+    display_name = StringField("Enter the display name for the twitter user (must be at least 2 words)", validators = [Required()])
     submit = SubmitField("Submit")
 
 # TODO 364: Set up custom validation for this form such that:
@@ -108,11 +108,11 @@ class TweetForm(FlaskForm):
 
     def validate_username(self, field):
         if field.data[0] == '@':
-            raise ValidationError("Your username was not valid because it starts with an @ symbol")
+            raise ValidationError("Username begins with @ sign -- leave off the @ for username!")
 
     def validate_display_name(self, field):
         if ' ' not in field.data:
-            raise ValidationError("Your display name was not valid because it needs to be at least two words")
+            raise ValidationError("Display name is not at least 2 words.")
 
 
 # TODO 364: Make sure to check out the sample application linked in the readme to check if yours is like it!
@@ -181,13 +181,13 @@ def index():
     ## Flash a message about a tweet being successfully added
     ## Redirect to the index page
         if db.session.query(Tweet).filter_by(text=form_text, user_id=user.id).first():
-            flash("That tweet already exists!")
-            return redirect(url_for("see all tweets"))
+            flash("That tweet already exists from that user!")
+            return redirect(url_for("see_all_tweets"))
         else:
             tweet = Tweet(text=form_text, user_id=user.id)
             db.session.add(tweet)
             db.session.commit()
-            flash("Tweet successfully added to the database")
+            flash("Tweet successfully saved")
             return redirect(url_for("index"))
 
     # PROVIDED: If the form did NOT validate / was not submitted
@@ -224,23 +224,10 @@ def see_all_users():
 @app.route('/longest_tweet')
 def get_longest_tweet():
     tweets = Tweet.query.all()
-    count = 0
-    for tweet in tweets:
-        dict = []
-        for char in tweet.text:
-            if char == ' ':
-                pass
-            else:
-                dict.append(char)
-        tweet_length = len(dict)
-        sorted_dict = sorted(dict)
-        if tweet_length > count:
-            longest_tweet = tweet
-
-        user = User.query.filter_by(id=tweet.user_id).first()
-
-
-
+    tweets.sort(key=lambda tweet: tweet.text)
+    tweets.sort(key = lambda tweet: sum([len(word) for word in tweet.text.split()]),reverse = True)
+    longest_tweet = tweets[0]
+    user = User.query.filter_by(id=longest_tweet.user_id).first()
     return render_template('longest_tweet.html', longest_tweet = longest_tweet, display_name=user.display_name)
 
 
