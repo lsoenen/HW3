@@ -232,12 +232,12 @@ def get_longest_tweet():
                 pass
             else:
                 dict.append(char)
-        sorted_dict = sorted(dict)
         tweet_length = len(dict)
+        sorted_dict = sorted(dict)
         if tweet_length > count:
             longest_tweet = tweet
-            user = User.query.filter_by(id=tweet.user_id).first()
-    print (sorted_dict)
+
+        user = User.query.filter_by(id=tweet.user_id).first()
 
 
 
