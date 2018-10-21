@@ -2,10 +2,6 @@
 
 {% block content %}
 
-<ul>
-{% for nm in longest_tweet %}
-  <li>{{ nm.text}}</li><br>
-{% endfor %}
-</ul>
+<p> {{longest_tweet}} -- <i>{{ display_name }}</i></p>
 
 {% endblock %}

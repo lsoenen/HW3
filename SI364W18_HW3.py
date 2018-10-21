@@ -154,12 +154,12 @@ def internal_server_error(e):
 def index():
     # Initialize the form
     form = TweetForm()
-    if form.validate_on_submit():
+    tweets = Tweet.query.all()
+    num_tweets = len(tweets)
     # Get the number of Tweets
-        tweets = Tweet.query.all()
-        num_tweets = len(tweets)
     # If the form was posted to this route,
     ## Get the data from the form
+    if form.validate_on_submit():
         form_text = form.text.data
         form_username = form.username.data
         form_display_name = form.display_name.data
@@ -194,7 +194,7 @@ def index():
     errors = [v for v in form.errors.values()]
     if len(errors) > 0:
         flash("!!!! ERRORS IN FORM SUBMISSION - " + str(errors))
-    return render_template('index.html', form=form) # TODO 364: Add more arguments to the render_template invocation to send data to index.html
+    return render_template('index.html', form=form, num_tweets=num_tweets) # TODO 364: Add more arguments to the render_template invocation to send data to index.html
 
 @app.route('/all_tweets')
 def see_all_tweets():
@@ -224,13 +224,24 @@ def see_all_users():
 @app.route('/longest_tweet')
 def get_longest_tweet():
     tweets = Tweet.query.all()
-    tweets = []
+    count = 0
     for tweet in tweets:
-        tweets.append(tweet)
-    return render_template('longest_tweet.html', longest_tweet=tweets)
+        dict = []
+        for char in tweet.text:
+            if char == ' ':
+                pass
+            else:
+                dict.append(char)
+        sorted_dict = sorted(dict)
+        tweet_length = len(dict)
+        if tweet_length > count:
+            longest_tweet = tweet
+            user = User.query.filter_by(id=tweet.user_id).first()
+    print (sorted_dict)
 
 
 
+    return render_template('longest_tweet.html', longest_tweet = longest_tweet, display_name=user.display_name)
 
 
 
