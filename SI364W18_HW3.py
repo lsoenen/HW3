@@ -231,9 +231,6 @@ def get_longest_tweet():
     return render_template('longest_tweet.html', longest_tweet = longest_tweet, display_name=user.display_name)
 
 
-
-
-
 # TODO 364
 # Create a template to accompany it called longest_tweet.html that extends from base.html.
 
